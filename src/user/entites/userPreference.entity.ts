@@ -4,7 +4,7 @@ import { UserEntity } from 'src/user/entites';
 @Entity({ name: 'user_preference' })
 export class UserPreferenceEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: number;
+  id: string;
 
   @Column({nullable: false, type: 'varchar' })
   title: string;
