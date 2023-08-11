@@ -4,20 +4,23 @@ import { UserEntity } from 'src/user/entites';
 @Entity({ name: 'user_token' })
 export class UserTokenEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: number;
+  id?: string;
 
   @Column({ nullable: false, type: 'timestamp' })
-  expiredAt?: Date;
+  expiredAt: Date;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt?: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt?: Date;
 
   @Column({nullable: false})
   token: string;
 
   @ManyToOne(() => UserEntity, user => user.userTokens)
-  user: UserEntity;
+  user?: UserEntity;
+
+  @Column({nullable: false})
+  userId: string;
 }

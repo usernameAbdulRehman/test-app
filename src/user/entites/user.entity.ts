@@ -4,7 +4,7 @@ import { UserPreferenceEntity, UserTokenEntity } from 'src/user/entites';
 @Entity({ name: 'user' })
 export class UserEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: number;
+  id?: string;
 
   @Column({nullable: false, type: 'varchar' })
   fullName: string;
@@ -13,23 +13,23 @@ export class UserEntity {
   email: string;
 
   @Column({ nullable: false, type: 'timestamp' })
-  dateOfBirth?: Date;
+  dateOfBirth: Date;
 
   @Column({ nullable: false, type: 'varchar' })
   password: string;
 
   @Column({ default: false })
-  isActive: boolean;
+  isActive?: Boolean;
 
   @OneToMany(() => UserTokenEntity, userToken => userToken.user)
-  userTokens: UserTokenEntity[];
+  userTokens?: UserTokenEntity[];
 
   @OneToMany(() => UserPreferenceEntity, userPreference => userPreference.user)
-  userPreferences: UserPreferenceEntity[];
+  userPreferences?: UserPreferenceEntity[];
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt?: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt?: Date;
 }
