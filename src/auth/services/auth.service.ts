@@ -1,9 +1,11 @@
 import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { UserInterface, UserTokenInterface } from 'src/user/interfaces';
+import { UserInterface } from 'src/user/interfaces';
 import { UserService, UserTokenService } from 'src/user/services';
+import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 import * as _ from 'lodash';
+import { LoginInterface } from 'src/auth/interfaces';
 
 
 
@@ -11,7 +13,8 @@ import * as _ from 'lodash';
 export class AuthService {
     constructor(
         private readonly userService : UserService,
-        private readonly userTokenService : UserTokenService
+        private readonly userTokenService : UserTokenService,
+        private jwtService: JwtService
       ){}
 
       async register(input: UserInterface): Promise<UserInterface> {
@@ -29,6 +32,22 @@ export class AuthService {
         await this.userTokenService.createUserToken({userId:createdUser.id, expiredAt, token })
         return _.omit(createdUser, 'password');
         
+      }
+
+      async login ({email, password}:{email: string, password:string}): Promise<LoginInterface>{
+        const user = await this.userService.findByEmail(email);
+        const valid = await this.comparePassword(password,user.password)
+        const { isActive } = user;
+
+        if(!user || !valid || !isActive){
+          throw new UnauthorizedException("Incorrect email or password");
+        }
+
+        const payload = { sub: user.id, username: user.fullName };
+        return {
+          accessToken: await this.jwtService.signAsync(payload),
+        };
+
       }
 
       async accountActivation({token, password}:{token: string, password:string}): Promise<boolean> {
@@ -50,6 +69,10 @@ export class AuthService {
 
       public hashPassword(password: string): Promise<string> {
         return bcrypt.hash(password, 10);
+      }
+
+      public comparePassword(attempt: string, password: string): Promise<boolean> {
+        return bcrypt.compare(attempt, password);
       }
 
       public isExpired(expiredAt) {
