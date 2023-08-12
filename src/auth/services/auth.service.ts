@@ -1,8 +1,9 @@
-import { ConflictException, Injectable } from '@nestjs/common';
-import { UserInterface } from 'src/user/interfaces';
+import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { UserInterface, UserTokenInterface } from 'src/user/interfaces';
 import { UserService, UserTokenService } from 'src/user/services';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
+import * as _ from 'lodash';
 
 
 
@@ -26,12 +27,34 @@ export class AuthService {
         expiredAt.setTime(expiredAt.getTime() + 2 * 60 * 60 * 1000);
         const token = randomBytes(20).toString('hex');
         await this.userTokenService.createUserToken({userId:createdUser.id, expiredAt, token })
-        return createdUser;
+        return _.omit(createdUser, 'password');
         
+      }
+
+      async accountActivation({token, password}:{token: string, password:string}): Promise<boolean> {
+        const userToken = await this.userTokenService.findByToken(token);
+        if(!userToken){
+          throw new NotFoundException("User token does not exist!");
+        }
+        const { expiredAt } = userToken;
+        if(this.isExpired(expiredAt)){
+          throw new UnauthorizedException("Token has expired")
+        }
+        const user = await this.userService.findById(userToken.userId);
+        if(user.isActive){
+          throw new ConflictException("Email Already Activated!");
+        }
+        await this.userService.updateUser(userToken.userId, { password: await this.hashPassword(password), isActive: true  })
+        return true
       }
 
       public hashPassword(password: string): Promise<string> {
         return bcrypt.hash(password, 10);
+      }
+
+      public isExpired(expiredAt) {
+        const currentDate = new Date();
+        return expiredAt < currentDate;
       }
     
     
