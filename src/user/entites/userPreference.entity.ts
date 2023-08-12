@@ -4,7 +4,7 @@ import { UserEntity } from 'src/user/entites';
 @Entity({ name: 'user_preference' })
 export class UserPreferenceEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id?: string;
 
   @Column({nullable: false, type: 'varchar' })
   title: string;
@@ -13,11 +13,14 @@ export class UserPreferenceEntity {
   description: string;
 
   @ManyToOne(() => UserEntity, user => user.userPreferences)
-  user: UserEntity;
+  user?: UserEntity;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt?: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt?: Date;
+
+  @Column({nullable: false})
+  userId: string;
 }
